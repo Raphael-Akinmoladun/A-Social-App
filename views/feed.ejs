@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pinfo Feed</title>
+    <!-- Bootstrap CSS from CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <!-- Navigation & Search Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">Pinfo</a>
+            
+            <!-- Mobile Toggle -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSearch">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Search Form & User Actions -->
+            <div class="collapse navbar-collapse" id="navbarSearch">
+                
+                <!-- Search Bar -->
+                <form class="d-flex mx-auto w-50 mt-3 mt-lg-0" action="/" method="GET">
+                    <input class="form-control me-2 rounded-pill px-4" type="search" name="search" placeholder="Search by author, title, or tags..." value="<%= searchQuery %>">
+                    <button class="btn btn-outline-light rounded-pill px-4" type="submit">Search</button>
+                </form>
+
+                <!-- Authenticated User Buttons -->
+                <% if (typeof loggedInUser !== 'undefined' && loggedInUser) { %>
+                    <div class="d-flex mt-3 mt-lg-0 ms-lg-auto">
+                        <a href="/posts/new" class="btn btn-success rounded-pill me-2">+ New Post</a>
+                        <!-- Public Profile showcase page for public viewing -->
+                        <a href="/users/<%= loggedInUser.username %>" class="btn btn-outline-light rounded-pill me-2">Profile</a>
+                        <!-- Private Dashboard management page -->
+                        <a href="/profile" class="btn btn-outline-light rounded-pill me-2">Dashboard</a>
+                        <a href="/logout" class="btn btn-danger rounded-pill">Logout</a>
+                    </div>
+                <% } else { %>
+                    <!-- Simplified login link for logged-out users in search collapse... -->
+                    <div class="d-flex mt-3 mt-lg-0 ms-lg-auto">
+                        <a href="/login" class="btn btn-primary rounded-pill me-2">Sign In</a>
+                    </div>
+                <% } %>
+            </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <!-- Main Feed Column -->
+            <div class="col-md-8 offset-md-2">
+                
+                <!-- Feed Header & Sorting -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="mb-0">Recent Posts</h4>
+                    <form action="/" method="GET" class="d-flex align-items-center">
+                        <!-- Keep search query active when sorting -->
+                        <input type="hidden" name="search" value="<%= searchQuery %>">
+                        <label class="me-2 text-muted small">Sort by:</label>
+                        <select name="sort_by" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+                            <option value="-createdAt">Newest First</option>
+                            <option value="-like_count">Most Liked</option>
+                            <option value="-comment_count">Most Commented</option>
+                        </select>
+                    </form>
+                </div>
+
+                <!-- Post Iteration -->
+                <% if (posts.length === 0) { %>
+                    <div class="alert alert-secondary text-center">No posts found. Try a different search!</div>
+                <% } else { %>
+                    <% posts.forEach(post => { %>
+                        <div class="card post-card mb-4">
+                            <div class="card-body">
+                                <!-- Author & Meta -->
+                                <div class="d-flex align-items-center mb-3">
+                                    
+                                    <!-- Initials Circle -->
+                                    <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-3" style="width: 45px; height: 45px; font-weight: bold; font-size: 1.2rem;">
+                                        <%= post.author.first_name[0] %><%= post.author.last_name[0] %>
+                                    </div>
+                                    
+                                    <!-- Name and Dates -->
+                                    <div>
+                                        <a href="#" class="author-name d-block"><%= post.author.first_name %> <%= post.author.last_name %> (@<%= post.author.username %>)</a>
+                                        <span class="post-date">
+                                            <%= new Date(post.createdAt).toLocaleDateString() %> • Public<br>
+                                            <!-- Follower Count -->
+                                            <strong id="follower-count-<%= post.author._id %>"><%= post.author.followers ? post.author.followers.length : 0 %></strong> Followers
+                                        </span>
+                                    </div>
+
+                                    <!-- Follow/Unfollow Button Logic -->
+                                    <% if (post.author._id.toString() !== currentUserId) { %>
+                                        <% const followersArray = post.author.followers ? post.author.followers.map(id => id.toString()) : []; %>
+                                        <% const isFollowing = followersArray.includes(currentUserId); %>
+                                        
+                                        <button id="follow-btn-<%= post.author._id %>" 
+                                                class="btn btn-sm ms-auto rounded-pill px-3 <%= isFollowing ? 'btn-danger' : 'btn-outline-primary' %>" 
+                                                data-following="<%= isFollowing %>"
+                                                onclick="toggleFollow('<%= post.author._id %>', this)">
+                                            <%= isFollowing ? 'Unfollow' : 'Follow' %>
+                                        </button>
+                                    <% } %>
+
+                                </div>
+                                <!-- Content -->
+                                <a href="/post/<%= post._id %>" class="text-dark text-decoration-none">
+                                    <h5 class="card-title fw-bold"><%= post.title %></h5>
+                                </a>
+                                <p class="card-text"><%= post.content %></p>
+
+                                <!-- Tags -->
+                                <div class="mb-3">
+                                    <% post.tags.forEach(tag => { %>
+                                        <span class="badge bg-secondary rounded-pill me-1">#<%= tag %></span>
+                                    <% }) %>
+                                </div>
+
+                                <!-- Stats -->
+                                <div class="d-flex justify-content-between text-muted small px-1">
+                                    <span id="like-count-<%= post._id %>"><%= post.like_count %> Likes</span>
+                                    <span><%= post.comment_count %> Comments</span>
+                                </div>
+
+                                <!-- Interaction Bar -->
+                                <div class="interaction-bar d-flex justify-content-between">
+                                    <!-- UPDATED: Like Button with onclick -->
+                                    <button class="btn btn-action flex-fill me-1" onclick="toggleLike('<%= post._id %>')">👍 Like</button>
+                                    <button class="btn btn-action flex-fill ms-1" type="button" data-bs-toggle="collapse" data-bs-target="#comments-<%= post._id %>">
+                                        💬 Comment
+                                    </button>
+                                </div>
+
+                                <!-- Collapsible Comment Section -->
+                                <div class="collapse mt-3" id="comments-<%= post._id %>">
+                                    <div class="comment-section">
+                                    
+                                        <!-- List Existing Comments -->
+                                        <div id="comment-list-<%= post._id %>" class="mb-3">
+                                            <% if (post.comments && post.comments.length > 0) { %>
+                                                <% post.comments.forEach(comment => { %>
+                                                    <div class="mb-2 border-bottom pb-2">
+                                                        <strong><%= comment.user.first_name %> <%= comment.user.last_name %>:</strong>
+                                                        <span class="text-muted small ms-2"><%= new Date(comment.createdAt).toLocaleDateString() %></span>
+                                                        <p class="mb-0 small"><%= comment.text %></p>
+                                                    </div>
+                                                <% }) %>
+                                            <% } %>
+                                        </div>
+
+                                        <!-- Add Comment Input -->
+                                        <div class="d-flex mb-3">
+                                            <input type="text" id="comment-input-<%= post._id %>" class="form-control rounded-pill me-2" placeholder="Write a comment...">
+                                            <button class="btn btn-primary rounded-pill px-3" onclick="submitComment('<%= post._id %>')">Post</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } %>
+
+                <!-- Pagination UI -->
+                <% if (pagination && pagination.totalPages > 1) { %>
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            
+                            <!-- Previous Button -->
+                            <li class="page-item <%= pagination.currentPage === 1 ? 'disabled' : '' %>">
+                                <a class="page-link" href="/?page=<%= pagination.currentPage - 1 %><%= searchQuery ? '&search=' + searchQuery : '' %>">Previous</a>
+                            </li>
+
+                            <!-- Page Numbers -->
+                            <% for(let i = 1; i <= pagination.totalPages; i++) { %>
+                                <li class="page-item <%= pagination.currentPage === i ? 'active' : '' %>">
+                                    <a class="page-link" href="/?page=<%= i %><%= searchQuery ? '&search=' + searchQuery : '' %>"><%= i %></a>
+                                </li>
+                            <% } %>
+
+                            <!-- Next Button -->
+                            <li class="page-item <%= pagination.currentPage === pagination.totalPages ? 'disabled' : '' %>">
+                                <a class="page-link" href="/?page=<%= pagination.currentPage + 1 %><%= searchQuery ? '&search=' + searchQuery : '' %>">Next</a>
+                            </li>
+                            
+                        </ul>
+                    </nav>
+                <% } %>
+
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Logic for Liking a Post
+    async function toggleLike(postId) {
+        try {
+            const response = await fetch(`/api/posts/${postId}/like`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin'
+            });
+
+            // Redirect if token is expired
+            if (response.status === 401) {
+                alert("Your session has expired. Please log in again.");
+                window.location.href = '/login';
+                return;
+            }
+
+            const result = await response.json();
+
+            if (result.success) {
+                document.getElementById(`like-count-${postId}`).innerText = `${result.like_count} Likes`;
+            } else {
+                alert(result.message || "An error occurred.");
+            }
+        } catch (error) {
+            console.error("Error toggling like:", error);
+        }
+    }
+
+    // Logic for Toggling Follow/Unfollow
+    async function toggleFollow(userId, btnElement) {
+        const isFollowing = btnElement.getAttribute('data-following') === 'true';
+        const endpoint = isFollowing ? `/api/users/${userId}/unfollow` : `/api/users/${userId}/follow`;
+
+        try {
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin'
+            });
+
+            // Redirect if token is expired
+            if (response.status === 401) {
+                alert("Your session has expired. Please log in again.");
+                window.location.href = '/login';
+                return;
+            }
+
+            const result = await response.json();
+
+            if (result.success) {
+                document.getElementById(`follower-count-${userId}`).innerText = result.followerCount;
+                
+                if (isFollowing) {
+                    btnElement.innerText = "Follow";
+                    btnElement.classList.remove('btn-danger');
+                    btnElement.classList.add('btn-outline-primary');
+                    btnElement.setAttribute('data-following', 'false');
+                } else {
+                    btnElement.innerText = "Unfollow";
+                    btnElement.classList.remove('btn-outline-primary');
+                    btnElement.classList.add('btn-danger');
+                    btnElement.setAttribute('data-following', 'true');
+                }
+            } else {
+                alert(result.message || "An error occurred."); 
+            }
+        } catch (error) {
+            console.error("Error toggling follow:", error);
+        }
+    }
+
+    // Logic for Submitting a Comment
+    async function submitComment(postId) {
+        const inputField = document.getElementById(`comment-input-${postId}`);
+        const text = inputField.value.trim();
+
+        if (!text) {
+            alert("Please write a comment first!");
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/posts/${postId}/comment`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({ text })
+            });
+
+            // Redirect if token is expired
+            if (response.status === 401) {
+                alert("Your session has expired. Please log in again.");
+                window.location.href = '/login';
+                return;
+            }
+
+            const result = await response.json();
+
+            if (result.success) {
+                const commentList = document.getElementById(`comment-list-${postId}`);
+                const newCommentHtml = `
+                    <div class="mb-2 border-bottom pb-2">
+                        <strong>${result.data.user.first_name} ${result.data.user.last_name}:</strong>
+                        <span class="text-muted small ms-2">Just now</span>
+                        <p class="mb-0 small">${result.data.text}</p>
+                    </div>
+                `;
+                commentList.insertAdjacentHTML('beforeend', newCommentHtml);
+                document.getElementById(`comment-count-${postId}`).innerText = `${result.comment_count} Comments`;
+                inputField.value = ''; 
+            } else {
+                alert(result.message || "An error occurred.");
+            }
+        } catch (error) {
+            console.error("Error posting comment:", error);
+        }
+    }
+</script>
+
+    <!-- Bootstrap JS Bundle from CDN (includes Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

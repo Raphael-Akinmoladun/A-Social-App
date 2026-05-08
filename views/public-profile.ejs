@@ -1,0 +1,173 @@
+<!-- views/public-profile.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= profileUser.first_name %> <%= profileUser.last_name %> (@<%= profileUser.username %>) - Pinfo</title>
+    <!-- Bootstrap CSS from CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS from the public folder -->
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <!-- Navigation & Search Bar (Shared from feed.ejs and updated) -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">Pinfo</a>
+            <!-- Mobile Toggle -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSearch">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <!-- Search Form -->
+            <div class="collapse navbar-collapse" id="navbarSearch">
+                <form class="d-flex mx-auto w-50 mt-3 mt-lg-0" action="/" method="GET">
+                    <input class="form-control me-2 rounded-pill px-4" type="search" name="search" placeholder="Search by author, title, or tags..." value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>">
+                    <button class="btn btn-outline-light rounded-pill px-4" type="submit">Search</button>
+                </form>
+                
+                <!-- Logged-in User Actions - This part is only shown for the *logged-in* user -->
+                <% if (typeof loggedInUser !== 'undefined' && loggedInUser) { %>
+                    <div class="d-flex mt-3 mt-lg-0">
+                        <a href="/posts/new" class="btn btn-success btn-sm me-2">+ New Post</a>
+                        <!-- Link to the logged-in user's public profile -->
+                        <a href="/users/<%= loggedInUser.username %>" class="btn btn-outline-light btn-sm me-2">Profile</a>
+                        <!-- Link to the private dashboard -->
+                        <a href="/profile" class="btn btn-outline-light btn-sm me-2">Dashboard</a>
+                        <a href="/logout" class="btn btn-outline-danger btn-sm">Logout</a>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <div class="row">
+            <!-- Profile Column (Left) -->
+            <div class="col-md-3">
+                <div class="card post-card p-3 text-center">
+                    <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center mx-auto mb-3" style="width: 100px; height: 100px; font-weight: bold; font-size: 2.5rem;">
+                        <%= profileUser.first_name[0] %><%= profileUser.last_name[0] %>
+                    </div>
+                    <h5 class="fw-bold m-0"><%= profileUser.first_name %> <%= profileUser.last_name %></h5>
+                    <p class="text-muted small">@<%= profileUser.username %></p>
+                </div>
+            </div>
+
+            <!-- Posts Column (Right) -->
+            <div class="col-md-9">
+                <!-- User Stats Header (NEW: The dynamic counts you asked for!) -->
+                <div class="card post-card mb-4 p-3 d-flex flex-row justify-content-around text-center">
+                    <div>
+                        <h4 class="fw-bold m-0"><%= posts.length %></h4>
+                        <span class="text-muted small">Posts</span>
+                    </div>
+                    <div class="cursor-pointer" onclick="fetchFollowList('followers', '<%= profileUser._id %>')" style="cursor: pointer;">
+                        <h4 class="fw-bold m-0"><%= profileUser.followers ? profileUser.followers.length : 0 %></h4>
+                        <span class="text-muted small">Followers</span>
+                    </div>
+                    <div class="cursor-pointer" onclick="fetchFollowList('following', '<%= profileUser._id %>')" style="cursor: pointer;">
+                        <h4 class="fw-bold m-0"><%= profileUser.following ? profileUser.following.length : 0 %></h4>
+                        <span class="text-muted small">Following</span>
+                    </div>
+                </div>
+
+                <!-- Posts Feed - Copies the clean style from your feed's cards -->
+                <h4 class="mb-4">Published Posts</h4>
+                <% if (posts.length === 0) { %>
+                    <div class="alert alert-secondary text-center">No posts yet!</div>
+                <% } else { %>
+                    <% posts.forEach(post => { %>
+                        <div class="card post-card mb-4">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-3" style="width: 45px; height: 45px; font-weight: bold; font-size: 1.2rem;">
+                                        <%= post.author.first_name[0] %><%= post.author.last_name[0] %>
+                                    </div>
+                                    <div>
+                                        <a href="#" class="author-name d-block"><%= post.author.first_name %> <%= post.author.last_name %> (@<%= post.author.username %>)</a>
+                                        <span class="post-date"><%= new Date(post.createdAt).toLocaleDateString() %> • Public</span>
+                                    </div>
+                                </div>
+                                <a href="/post/<%= post._id %>" class="text-dark text-decoration-none">
+                                    <h5 class="card-title fw-bold"><%= post.title %></h5>
+                                </a>
+                                <p class="card-text"><%= post.content %></p>
+                                <div class="mb-3">
+                                    <% post.tags.forEach(tag => { %>
+                                        <span class="badge bg-secondary rounded-pill me-1">#<%= tag %></span>
+                                    <% }) %>
+                                </div>
+                                <!-- Visual-only likes and comments count from requirements -->
+                                <div class="d-flex justify-content-between text-muted small px-1">
+                                    <span><%= post.like_count %> Likes</span>
+                                    <span><%= post.comment_count %> Comments</span>
+                                </div>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+    <!-- Follow List Modal -->
+    <div class="modal fade" id="followModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title fw-bold" id="followModalTitle">Users</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="followModalBody">
+            <!-- List will be injected here via JavaScript -->
+            <div class="text-center text-muted">Loading...</div>
+        </div>
+        </div>
+    </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        async function fetchFollowList(type, userId) {
+            // Show the modal immediately with a loading state
+            document.getElementById('followModalTitle').innerText = type === 'followers' ? 'Followers' : 'Following';
+            document.getElementById('followModalBody').innerHTML = '<div class="text-center text-muted">Loading...</div>';
+            new bootstrap.Modal(document.getElementById('followModal')).show();
+
+            try {
+                // Hit the endpoints we built earlier!
+                const response = await fetch(`/api/users/${userId}/${type}`);
+                const result = await response.json();
+
+                const body = document.getElementById('followModalBody');
+                body.innerHTML = ''; // Clear loading text
+
+                if (result.success && result.data.length > 0) {
+                    result.data.forEach(user => {
+                        // Build a mini-profile row for each user
+                        body.innerHTML += `
+                            <div class="d-flex align-items-center mb-3 p-2 border-bottom">
+                                <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-3" style="width: 40px; height: 40px; font-weight: bold;">
+                                    ${user.first_name[0]}${user.last_name[0]}
+                                </div>
+                                <div>
+                                    <a href="/users/${user.username}" class="text-dark text-decoration-none fw-bold d-block">${user.first_name} ${user.last_name}</a>
+                                    <span class="text-muted small">@${user.username}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    body.innerHTML = '<p class="text-center text-muted mt-3">No users found.</p>';
+                }
+            } catch (error) {
+                console.error("Error fetching list:", error);
+                document.getElementById('followModalBody').innerHTML = '<p class="text-danger text-center">Failed to load list.</p>';
+            }
+        }
+    </script>
+</body>
+</html>
