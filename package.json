@@ -2,10 +2,10 @@
   "name": "a-social-app",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
+  "main": "server.js",
   "scripts": {
-    "test": "cross-env NODE_ENV=test jest --testTimeout=10000 --forceExit",
-    "start": "node app.js",
+    "test": "cross-env NODE_ENV=test jest",
+    "start": "node server.js",
     "dev": "nodemon server.js"
   },
   "keywords": [],
