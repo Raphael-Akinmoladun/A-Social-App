@@ -10,45 +10,41 @@
 </head>
 <body>
 
-    <!-- Navigation & Search Bar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="/">Pinfo</a>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container flex-nowrap">
+        
+        <a class="navbar-brand fw-bold" href="/">Pinfo</a>
+
+        <div class="d-flex align-items-center ms-auto me-2 gap-2 overflow-x-auto" style="white-space: nowrap;">
             
-            <!-- Mobile Toggle -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSearch">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+            <form class="d-flex m-0" action="/" method="GET">
+                <input class="form-control form-control-sm me-1 rounded-pill px-3" type="search" name="search" placeholder="Search..." value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>">
+                <button class="btn btn-sm btn-outline-light rounded-pill px-3" type="submit">Search</button>
+            </form>
 
-            <!-- Search Form & User Actions -->
-            <div class="collapse navbar-collapse" id="navbarSearch">
-                
-                <!-- Search Bar -->
-                <form class="d-flex mx-auto w-50 mt-3 mt-lg-0" action="/" method="GET">
-                    <input class="form-control me-2 rounded-pill px-4" type="search" name="search" placeholder="Search by author, title, or tags..." value="<%= searchQuery %>">
-                    <button class="btn btn-outline-light rounded-pill px-4" type="submit">Search</button>
-                </form>
-
-                <!-- Authenticated User Buttons -->
-                <% if (typeof loggedInUser !== 'undefined' && loggedInUser) { %>
-                    <div class="d-flex mt-3 mt-lg-0 ms-lg-auto">
-                        <a href="/posts/new" class="btn btn-success rounded-pill me-2">+ New Post</a>
-                        <!-- Public Profile showcase page for public viewing -->
-                        <a href="/users/<%= loggedInUser.username %>" class="btn btn-outline-light rounded-pill me-2">Profile</a>
-                        <!-- Private Dashboard management page -->
-                        <a href="/profile" class="btn btn-outline-light rounded-pill me-2">Dashboard</a>
-                        <a href="/logout" class="btn btn-danger rounded-pill">Logout</a>
-                    </div>
-                <% } else { %>
-                    <!-- Simplified login link for logged-out users in search collapse... -->
-                    <div class="d-flex mt-3 mt-lg-0 ms-lg-auto">
-                        <a href="/login" class="btn btn-primary rounded-pill me-2">Sign In</a>
-                    </div>
-                <% } %>
-            </div>
-            </div>
+            <% if (typeof loggedInUser !== 'undefined' && loggedInUser) { %>
+                <div class="d-flex m-0 gap-1">
+                    <a href="/posts/new" class="btn btn-sm btn-success rounded-pill">+ New Post</a>
+                    <a href="/users/<%= loggedInUser.username %>" class="btn btn-sm btn-outline-light rounded-pill">Profile</a>
+                    <a href="/profile" class="btn btn-sm btn-outline-light rounded-pill">Dashboard</a>
+                    <a href="/logout" class="btn btn-sm btn-danger rounded-pill">Logout</a>
+                </div>
+            <% } else { %>
+                <div class="d-flex m-0">
+                    <a href="/login" class="btn btn-sm btn-primary rounded-pill">Sign In</a>
+                </div>
+            <% } %>
         </div>
-    </nav>
+
+        <button class="navbar-toggler ms-1 px-2 py-1" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSearch">
+            <span class="navbar-toggler-icon" style="width: 1.2em; height: 1.2em;"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSearch">
+            </div>
+
+    </div>
+</nav>
 
     <div class="container mt-4">
         <div class="row">
