@@ -292,6 +292,7 @@
             const result = await response.json();
 
             if (result.success) {
+                inputField.value = ''; 
                 const commentList = document.getElementById(`comment-list-${postId}`);
                 const newCommentHtml = `
                     <div class="mb-2 border-bottom pb-2">
@@ -302,7 +303,6 @@
                 `;
                 commentList.insertAdjacentHTML('beforeend', newCommentHtml);
                 document.getElementById(`comment-count-${postId}`).innerText = `${result.comment_count} Comments`;
-                inputField.value = ''; 
             } else {
                 alert(result.message || "An error occurred.");
             }
