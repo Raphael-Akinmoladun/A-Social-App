@@ -11,38 +11,37 @@
 <body>
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
-    <div class="container flex-nowrap">
+    <div class="container-fluid flex-nowrap align-items-center">
         
-        <a class="navbar-brand fw-bold" href="/">Pinfo</a>
+        <a class="navbar-brand fw-bold me-2" href="/">Pinfo</a>
 
-        <div class="d-flex align-items-center ms-auto me-2 gap-2 overflow-x-auto" style="white-space: nowrap;">
+        <div class="d-flex align-items-center ms-auto gap-2">
             
             <form class="d-flex m-0" action="/" method="GET">
-                <input class="form-control form-control-sm me-1 rounded-pill px-3" type="search" name="search" placeholder="Search..." value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>">
-                <button class="btn btn-sm btn-outline-light rounded-pill px-3" type="submit">Search</button>
+                <input class="form-control form-control-sm rounded-pill" type="search" name="search" placeholder="Search..." value="<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>" style="max-width: 140px;">
             </form>
 
             <% if (typeof loggedInUser !== 'undefined' && loggedInUser) { %>
-                <div class="d-flex m-0 gap-1">
-                    <a href="/posts/new" class="btn btn-sm btn-success rounded-pill">+ New Post</a>
-                    <a href="/users/<%= loggedInUser.username %>" class="btn btn-sm btn-outline-light rounded-pill">Profile</a>
-                    <a href="/profile" class="btn btn-sm btn-outline-light rounded-pill">Dashboard</a>
-                    <a href="/logout" class="btn btn-sm btn-danger rounded-pill">Logout</a>
-                </div>
+                <a href="/posts/new" class="btn btn-sm btn-success rounded-pill">Post</a>
             <% } else { %>
-                <div class="d-flex m-0">
-                    <a href="/login" class="btn btn-sm btn-primary rounded-pill">Sign In</a>
-                </div>
+                <a href="/login" class="btn btn-sm btn-primary rounded-pill">Sign In</a>
             <% } %>
+
+            <button class="navbar-toggler border-0 px-1" type="button" data-bs-toggle="collapse" data-bs-target="#mobileMenu">
+                <span class="navbar-toggler-icon" style="width: 1.2em; height: 1.2em;"></span>
+            </button>
         </div>
+    </div>
 
-        <button class="navbar-toggler ms-1 px-2 py-1" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSearch">
-            <span class="navbar-toggler-icon" style="width: 1.2em; height: 1.2em;"></span>
-        </button>
-
-        <div class="collapse navbar-collapse" id="navbarSearch">
+    <div class="collapse navbar-collapse px-3 pb-2" id="mobileMenu">
+        <% if (typeof loggedInUser !== 'undefined' && loggedInUser) { %>
+            <hr class="text-secondary d-lg-none">
+            <div class="d-flex flex-column gap-2 mt-2 d-lg-none">
+                <a href="/users/<%= loggedInUser.username %>" class="btn btn-outline-light rounded-pill">My Profile</a>
+                <a href="/profile" class="btn btn-outline-light rounded-pill">Dashboard</a>
+                <a href="/logout" class="btn btn-danger rounded-pill">Logout</a>
             </div>
-
+        <% } %>
     </div>
 </nav>
 
