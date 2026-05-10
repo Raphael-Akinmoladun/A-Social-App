@@ -292,7 +292,10 @@
             const result = await response.json();
 
             if (result.success) {
+                // 1. CLEAR THE BOX FIRST! So if anything below crashes, the box is already empty.
                 inputField.value = ''; 
+
+                // 2. Add the comment to the list
                 const commentList = document.getElementById(`comment-list-${postId}`);
                 const newCommentHtml = `
                     <div class="mb-2 border-bottom pb-2">
@@ -302,7 +305,12 @@
                     </div>
                 `;
                 commentList.insertAdjacentHTML('beforeend', newCommentHtml);
-                document.getElementById(`comment-count-${postId}`).innerText = `${result.comment_count} Comments`;
+
+                // 3. Fix the crash by checking if the comment-count element actually exists before updating it!
+                const countElement = document.getElementById(`comment-count-${postId}`);
+                if (countElement) {
+                    countElement.innerText = `${result.comment_count} Comments`;
+                }
             } else {
                 alert(result.message || "An error occurred.");
             }
